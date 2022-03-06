@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\APIStructure;
 use App\Models\Location;
 use App\Models\Schedule;
 use App\Models\Train;
@@ -27,11 +28,45 @@ class TrainController extends Controller
         return view('pages.trains', compact(['title', 'locations', 'trains']));
     }
 
+    public function getAvailableAPI(Request $request)
+    {
+        $date = $request->date;
+        $startLocation = $request->start;
+        $endLocation = $request->end;
+
+        $data = [];
+
+        foreach (Train::where('status', 1)->get() as $keyTrain => $valueTrain) {
+            $scheduleData = [];
+            $startLocationRec = null;
+            // foreach (Schedule::where('train', $valueTrain->id)->where('slot','>',Carbon::now())->whereDate('slot', $date)->orderBy('slot', 'ASC')->get() as $keySchedule => $valueSchedule) {
+            foreach (Schedule::where('train', $valueTrain->id)->where('slot','>',Carbon::now()->timezone('Asia/Colombo'))->whereDate('slot', $date)->orderBy('slot', 'ASC')->get() as $keySchedule => $valueSchedule) {
+                if ($valueSchedule->location == $startLocation && $startLocationRec == null) {
+                    $startLocationRec = $valueSchedule;
+                }
+
+                if ($startLocationRec != null && $valueSchedule->location == $endLocation && $startLocationRec->turn == $valueSchedule->turn) {
+                    $scheduleData[] = $startLocationRec;
+                    $scheduleData[] = $valueSchedule;
+                    $startLocationRec = null;
+                }
+            }
+            if (count($scheduleData) > 0) {
+                $valueTrain['schedules']=$scheduleData;
+                $data[] = $valueTrain;
+            }
+        }
+        return APIStructure::getResponse($data, [], 200);
+    }
+
     public function getAvailable(Request $request)
     {
         $date = $request->date;
         $startLocation = $request->start;
         $endLocation = $request->end;
+
+        error_log($date);
+
 
         $data = [];
 

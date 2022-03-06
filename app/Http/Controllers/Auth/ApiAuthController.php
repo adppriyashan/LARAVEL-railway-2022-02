@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\APIStructure;
 use App\Models\Booking;
+use App\Models\Location;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,8 +45,8 @@ class ApiAuthController extends Controller
         $user = User::where('email', $request->email)->first();
         if ($user) {
             if (Hash::check($request->password, $user->password)) {
-                $tickets=Booking::where('user',$user->id)->get();
-                return APIStructure::getResponse(['token' =>  $user->createToken($this->tokenPrefix)->accessToken,'user'=>$user,'tickets'=>$tickets], []);
+                $tickets = Booking::where('user', $user->id)->get();
+                return APIStructure::getResponse(['token' =>  $user->createToken($this->tokenPrefix)->accessToken, 'user' => $user, 'tickets' => $tickets, 'locations' => Location::select('id','location')->orderBy('location', 'ASC')->get()], []);
             } else {
                 return APIStructure::getResponse([], [], 422);
             }
