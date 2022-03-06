@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\APIStructure;
+use App\Models\Booking;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -42,7 +44,8 @@ class ApiAuthController extends Controller
         $user = User::where('email', $request->email)->first();
         if ($user) {
             if (Hash::check($request->password, $user->password)) {
-                return APIStructure::getResponse(['token' =>  $user->createToken($this->tokenPrefix)->accessToken], []);
+                $tickets=Booking::where('user',$user->id)->get();
+                return APIStructure::getResponse(['token' =>  $user->createToken($this->tokenPrefix)->accessToken,'user'=>$user,'tickets'=>$tickets], []);
             } else {
                 return APIStructure::getResponse([], [], 422);
             }
