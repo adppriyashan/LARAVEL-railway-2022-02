@@ -52,7 +52,7 @@ class SeasonController extends Controller
                 'status' => $request->status
             ]);
 
-            $authcode = 'S-' + $saved->id . Carbon::now()->format('ymdhis');
+            $authcode = 'S-' . $saved->id . Carbon::now()->format('ymdhis');
 
             $saved->update(['authcode' => $authcode]);
         } else {

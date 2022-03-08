@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\APIStructure;
+use App\Models\BookingSeat;
 use App\Models\Location;
 use App\Models\Schedule;
 use App\Models\Train;
+use App\Models\TrainTickets;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,7 +41,6 @@ class TrainController extends Controller
         foreach (Train::where('status', 1)->get() as $keyTrain => $valueTrain) {
             $scheduleData = [];
             $startLocationRec = null;
-            // foreach (Schedule::where('train', $valueTrain->id)->where('slot','>',Carbon::now())->whereDate('slot', $date)->orderBy('slot', 'ASC')->get() as $keySchedule => $valueSchedule) {
             foreach (Schedule::where('train', $valueTrain->id)->where('slot','>',Carbon::now()->timezone('Asia/Colombo'))->whereDate('slot', $date)->orderBy('slot', 'ASC')->get() as $keySchedule => $valueSchedule) {
                 if ($valueSchedule->location == $startLocation && $startLocationRec == null) {
                     $startLocationRec = $valueSchedule;
@@ -52,6 +53,17 @@ class TrainController extends Controller
                 }
             }
             if (count($scheduleData) > 0) {
+                $bookeddata = [];
+                foreach (BookingSeat::select('seat')->where('status', 1)->where('endtime', '>', Carbon::now())->where('turn', $valueTrain->turn)->where('starttime', $startLocation)->where('endtime', $endLocation)->get() as $key => $value) {
+                    $bookeddata[] = $value->seat;
+                }
+                $class1 = TrainTickets::where('class', 1)->where('train', $valueTrain->id)->where('start', $startLocation)->where('end', $endLocation)->first();
+                $class2 = TrainTickets::where('class', 2)->where('train', $valueTrain->id)->where('start', $startLocation)->where('end', $endLocation)->first();
+                $class3 = TrainTickets::where('class', 3)->where('train', $valueTrain->id)->where('start', $startLocation)->where('end', $endLocation)->first();
+                $valueTrain['class1price']=(($class1) ? $class1->price : 0);
+                $valueTrain['class2price']=(($class2) ? $class2->price : 0);
+                $valueTrain['class3price']=(($class3) ? $class2->price : 0);
+                $valueTrain['booked']=$bookeddata;
                 $valueTrain['schedules']=$scheduleData;
                 $data[] = $valueTrain;
             }
