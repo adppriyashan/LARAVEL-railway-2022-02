@@ -10,6 +10,6 @@ Route::post('/login', [ApiAuthController::class, 'login'])->name('api.login');
 
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('/logout', [ApiAuthController::class, 'logout'])->name('api.logout');
-    Route::post('/enroll', [BookingController::class, 'enroll'])->name('api.bookings.enroll');
+    Route::post('/enrollbooking', [BookingController::class, 'enrollAPI'])->name('api.bookings.enroll');
     Route::post('/available', [TrainController::class, 'getAvailableAPI'])->name('api.trains.get.available');
 });

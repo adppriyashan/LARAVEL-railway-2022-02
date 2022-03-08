@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\BookingMail;
 use App\Models\Booking;
+use App\Models\APIStructure;
 use App\Models\BookingSeat;
 use App\Models\Location;
 use App\Models\Season;
@@ -37,6 +38,31 @@ class BookingController extends Controller
         $data = BookingSeat::where('id', $seatid)->first();
         $code = $seatid . '/' . $data->turn . '/' . $data->start . '/' . $data->end;
         return view('prints.qr', compact(['code']));
+    }
+
+    public function enrollAPI(Request $request)
+    {
+        $booking = Booking::create([
+            'user' => Auth::user()->id, 'date' => $request->date, 'price' => $request->amount, 'turn' => $request->turn, 'start' => $request->start, 'end' => $request->end
+        ]);
+
+        foreach (json_decode($request->seats) as $keySeat => $valueSeat) {
+            BookingSeat::create([
+                'booking' => $booking->id,
+                'turn' => $request->turn,
+                'seat' => $valueSeat-1,
+                'start' => $request->start,
+                'end' => $request->end,
+                'starttime' => $request->starttime,
+                'endtime' => $request->endtime
+            ]);
+        }
+
+        $bookingdata = Booking::where('id', $booking->id)->with('seatsdata')->first();
+
+        Mail::to(Auth::user()->email)->send(new BookingMail($bookingdata));
+
+        return APIStructure::getResponse(Booking::where('user', Auth::user()->id)->get(), [], 200);
     }
 
     public function enroll(Request $request)

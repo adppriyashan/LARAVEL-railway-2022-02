@@ -54,7 +54,7 @@ class TrainController extends Controller
             }
             if (count($scheduleData) > 0) {
                 $bookeddata = [];
-                foreach (BookingSeat::select('seat')->where('status', 1)->where('endtime', '>', Carbon::now())->where('turn', $valueTrain->turn)->where('starttime', $startLocation)->where('endtime', $endLocation)->get() as $key => $value) {
+                foreach (BookingSeat::select('seat')->where('status', 1)->where('endtime', '>', Carbon::now())->where('turn',$scheduleData[0]->turn)->where('starttime', $scheduleData[0]->slot)->where('endtime', $scheduleData[1]->slot)->get() as $key => $value) {
                     $bookeddata[] = $value->seat;
                 }
                 $class1 = TrainTickets::where('class', 1)->where('train', $valueTrain->id)->where('start', $startLocation)->where('end', $endLocation)->first();
